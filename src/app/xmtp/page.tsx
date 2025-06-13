@@ -71,7 +71,7 @@ export default function XMTPPage() {
   });
   
   const [serviceStats, setServiceStats] = useState<ServiceStats>({
-    botAddress: '0x742d35Cc6634C0532925a3b8D4B1329980A44D7F',
+    botAddress: ' 0x742d35C...329980A44D7F',
     activeSessions: 23
   });
 
@@ -224,8 +224,116 @@ export default function XMTPPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-12 gap-6" style={{ height: 'calc(100vh - 120px)' }}>
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        
+        {/* Mobile Layout - Stack vertically */}
+        <div className="block lg:hidden space-y-6">
+          
+          {/* XMTP Chat - Full width on mobile */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+          >
+            <div className="h-80 sm:h-96">
+              <XMTPGameChatDynamic />
+            </div>
+          </motion.div>
+
+          {/* DetectWhale Game - Full width on mobile */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="w-full"
+          >
+            <div className="h-80">
+              <DetectWhaleGameDynamic onScoreUpdate={setGameScore} />
+            </div>
+          </motion.div>
+
+          {/* Service Status & Alerts - Full width stacked on mobile */}
+          <div className="w-full space-y-4">
+            
+            {/* Service Status */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-white/20 p-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  <span>Service Status</span>
+                </h3>
+                <div className="flex items-center space-x-1">
+                  <Wifi className="w-3 h-3 text-green-400" />
+                  <span className="text-green-400 text-xs">Online</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">XMTP Service</span>
+                  <span className="text-green-400 font-medium text-sm">Ready</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Bot Address</span>
+                  <span className="text-white text-xs truncate max-w-32">{serviceStats.botAddress}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Active Sessions</span>
+                  <span className="text-white font-medium text-sm">{serviceStats.activeSessions}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 text-sm">Whale Monitoring</span>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-green-400 text-xs">Active</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Live Whale Alerts */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-white/20 p-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-400" />
+                  <span>Live Alerts</span>
+                </h3>
+                <div className="text-xs text-gray-400">Real-time</div>
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin">
+                {recentWhaleAlerts.slice(0, 4).map((alert, index) => (
+                  <motion.div
+                    key={alert.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`p-2 rounded-lg border ${getSeverityColor(alert.severity)}`}
+                  >
+                    <div className="font-medium text-xs">{alert.whale}</div>
+                    <div className="text-xs opacity-80 mt-1">{alert.action}</div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="font-bold text-xs">{alert.amount}</span>
+                      <span className="text-xs opacity-60">{alert.time}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+
+        {/* Desktop Layout - 3 column grid */}
+        <div className="hidden lg:grid grid-cols-12 gap-6 min-h-[calc(100vh-200px)]">
           
           {/* Left Sidebar - DetectWhale Game */}
           <div className="col-span-3 h-full">
@@ -249,7 +357,7 @@ export default function XMTPPage() {
             </motion.div>
           </div>
 
-          {/* Right Sidebar - Live Whale Alerts & Service Status */}
+          {/* Right Sidebar - Service Status & Alerts */}
           <div className="col-span-3 h-full overflow-y-auto scrollbar-enhanced">
             <div className="space-y-6 h-full">
               
@@ -330,6 +438,130 @@ export default function XMTPPage() {
 
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Coming Soon Section */}
+      <div className="bg-gray-800/30 backdrop-blur-xl border-t border-white/20 py-8 sm:py-12 lg:py-16 mt-20 sm:mt-32 lg:mt-40">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8 sm:mb-12"
+          >
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
+              🚀 Coming Soon
+            </h2>
+            <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto px-4">
+              Exciting new features are on the horizon! Get ready for the next evolution of whale hunting.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            
+            {/* Custom AI Agents */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="group bg-gradient-to-br from-purple-600/20 to-blue-600/20 backdrop-blur-xl rounded-xl border border-white/20 p-4 sm:p-6 hover:border-purple-400/50 transition-all duration-300 hover:scale-105"
+            >
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">🤖</div>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Custom AI Agents</h3>
+              <p className="text-gray-400 text-sm mb-3 sm:mb-4">
+                Create multiple AI agents using simple prompts and launch them with XMTP integration. 
+                Build your own whale hunting bots with custom personalities and strategies.
+              </p>
+              <div className="flex items-center space-x-2 text-purple-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-medium">In Development</span>
+              </div>
+            </motion.div>
+
+            {/* NFT Marketplace */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="group bg-gradient-to-br from-pink-600/20 to-orange-600/20 backdrop-blur-xl rounded-xl border border-white/20 p-4 sm:p-6 hover:border-pink-400/50 transition-all duration-300 hover:scale-105"
+            >
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">🎨</div>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">NFT Marketplace</h3>
+              <p className="text-gray-400 text-sm mb-3 sm:mb-4">
+                Guess whales correctly, earn points, and claim exclusive NFTs! Trade your whale hunter 
+                achievements in our dedicated marketplace with other players.
+              </p>
+              <div className="flex items-center space-x-2 text-pink-400">
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-medium">Coming Q2 2024</span>
+              </div>
+            </motion.div>
+
+            {/* Tournament System */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="group bg-gradient-to-br from-green-600/20 to-teal-600/20 backdrop-blur-xl rounded-xl border border-white/20 p-4 sm:p-6 hover:border-green-400/50 transition-all duration-300 hover:scale-105"
+            >
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">🏆</div>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Tournament System</h3>
+              <p className="text-gray-400 text-sm mb-3 sm:mb-4">
+                Game creators can host tournaments where players compete in group chats. 
+                Winners share prize pools and earn exclusive rewards and recognition.
+              </p>
+              <div className="flex items-center space-x-2 text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-medium">Beta Testing</span>
+              </div>
+            </motion.div>
+
+            {/* Whale Reports */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="group bg-gradient-to-br from-yellow-600/20 to-red-600/20 backdrop-blur-xl rounded-xl border border-white/20 p-4 sm:p-6 hover:border-yellow-400/50 transition-all duration-300 hover:scale-105"
+            >
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">📊</div>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Whale Reports</h3>
+              <p className="text-gray-400 text-sm mb-3 sm:mb-4">
+                Create and sell comprehensive whale analysis reports. Share your trading strategies, 
+                technical analysis, and market insights to help new traders succeed.
+              </p>
+              <div className="flex items-center space-x-2 text-yellow-400">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm font-medium">Research Phase</span>
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Call to Action */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-12"
+          >
+            {/* <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl rounded-xl border border-white/20 p-8 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-white mb-4">
+                🔔 Stay Updated
+              </h3>
+              <p className="text-gray-400 mb-6">
+                Be the first to know when these exciting features launch! Join our community for exclusive updates and early access.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+                  Join Discord
+                </button>
+                <button className="bg-white/10 backdrop-blur-xl text-white px-6 py-3 rounded-lg font-medium border border-white/20 hover:bg-white/20 transition-all duration-300">
+                  Follow Updates
+                </button>
+              </div>
+            </div> */}
+          </motion.div>
+
         </div>
       </div>
 
