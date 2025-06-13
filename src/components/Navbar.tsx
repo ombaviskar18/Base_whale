@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { useAccount, useDisconnect, useBalance } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { 
   Home, 
   Trophy, 
@@ -11,9 +11,7 @@ import {
   User, 
   Wallet, 
   Menu, 
-  X, 
-  Settings,
-  LogOut
+  X
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -26,32 +24,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onPageChange
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
   const { data: balance } = useBalance({
     address: address,
   });
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsAccountDropdownOpen(false);
-      }
-    };
-
-    if (isAccountDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isAccountDropdownOpen]);
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -74,9 +52,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Desktop Navbar */}
       <nav className="hidden lg:flex items-center justify-between px-8 py-4 backdrop-blur-xl bg-white/5 border-b border-white/10">
         {/* Logo */}
-        <motion.div 
-          className="flex items-center space-x-3"
+        <motion.button 
+          onClick={() => onPageChange('home')}
+          className="flex items-center space-x-3 cursor-pointer"
           whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-2xl">🐋</span>
@@ -87,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </h1>
             <p className="text-xs text-gray-400">XMTP Powered</p>
           </div>
-        </motion.div>
+        </motion.button>
 
         {/* Navigation Items */}
         <div className="flex items-center space-x-8">
@@ -111,97 +91,43 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Wallet Connection */}
         <div className="flex items-center space-x-4">
-          <div className="relative" ref={dropdownRef}>
-            {isConnected ? (
-              <motion.button
-                onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
-                className="flex items-center space-x-3 px-4 py-2 bg-green-500/20 rounded-lg border border-green-400/30 text-green-400 hover:bg-green-500/30 transition-colors"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Wallet className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold">{formatAddress(address!)}</div>
-                  <div className="text-xs text-green-300">
-                    {formatBalance(balance)} ETH
-                  </div>
+          {isConnected ? (
+            <div className="flex items-center space-x-3 px-4 py-2 bg-green-500/20 rounded-lg border border-green-400/30 text-green-400">
+              <Wallet className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-semibold">{formatAddress(address!)}</div>
+                <div className="text-xs text-green-300">
+                  {formatBalance(balance)} ETH
                 </div>
-              </motion.button>
-            ) : (
-              <motion.button
-                onClick={() => open()}
-                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white font-semibold"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Wallet className="w-5 h-5" />
-                <span>Connect Wallet</span>
-              </motion.button>
-            )}
-
-            {/* Account Dropdown */}
-            <AnimatePresence>
-              {isAccountDropdownOpen && isConnected && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-64 backdrop-blur-xl bg-gray-900/95 rounded-lg border border-white/20 p-4 shadow-2xl"
-                  style={{ zIndex: 9999 }}
-                >
-                  <div className="space-y-3">
-                    <div className="text-sm text-gray-300">
-                      <div className="font-semibold text-white mb-2">Account Details</div>
-                      <div className="space-y-1">
-                        <div>Address: <span className="text-green-400 font-mono">{formatAddress(address!)}</span></div>
-                        <div>Balance: <span className="text-blue-400 font-semibold">{formatBalance(balance)} ETH</span></div>
-                        <div>Network: <span className="text-purple-400">Ethereum</span></div>
-                      </div>
-                    </div>
-                    
-                    <hr className="border-white/20" />
-                    
-                    <div className="space-y-2">
-                      <button 
-                        className="flex items-center space-x-2 w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
-                        onClick={() => {
-                          onPageChange('account');
-                          setIsAccountDropdownOpen(false);
-                        }}
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Account Settings</span>
-                      </button>
-                      
-                      <button 
-                        className="flex items-center space-x-2 w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
-                        onClick={() => {
-                          disconnect();
-                          setIsAccountDropdownOpen(false);
-                        }}
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Disconnect</span>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              </div>
+            </div>
+          ) : (
+            <motion.button
+              onClick={() => open()}
+              className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white font-semibold"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Wallet className="w-5 h-5" />
+              <span>Connect Wallet</span>
+            </motion.button>
+          )}
         </div>
       </nav>
 
       {/* Mobile Navbar */}
       <nav className="lg:hidden flex items-center justify-between px-4 py-3 backdrop-blur-xl bg-white/5 border-b border-white/10">
         {/* Mobile Logo */}
-        <div className="flex items-center space-x-2">
+        <motion.button 
+          onClick={() => onPageChange('home')}
+          className="flex items-center space-x-2 cursor-pointer"
+          whileTap={{ scale: 0.95 }}
+        >
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-lg">🐋</span>
           </div>
           <span className="font-bold text-white">Whale Hunter</span>
-        </div>
-
-
+        </motion.button>
 
         {/* Mobile Menu Button */}
         <motion.button
@@ -247,25 +173,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Wallet Section */}
               {isConnected ? (
-                <div className="space-y-2">
-                  <div className="px-4 py-3 bg-green-500/20 rounded-lg border border-green-400/30">
-                    <div className="text-green-400 font-semibold text-sm">
-                      {formatAddress(address!)}
-                    </div>
-                    <div className="text-green-300 text-xs">
-                      {formatBalance(balance)} ETH
-                    </div>
+                <div className="px-4 py-3 bg-green-500/20 rounded-lg border border-green-400/30">
+                  <div className="text-green-400 font-semibold text-sm">
+                    {formatAddress(address!)}
                   </div>
-                  <button
-                    onClick={() => {
-                      disconnect();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center space-x-2 w-full px-4 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Disconnect</span>
-                  </button>
+                  <div className="text-green-300 text-xs">
+                    {formatBalance(balance)} ETH
+                  </div>
+                  <div className="text-gray-400 text-xs mt-1">
+                    Go to Account page for more options
+                  </div>
                 </div>
               ) : (
                 <motion.button
@@ -284,14 +201,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Click outside to close dropdown */}
-      {isAccountDropdownOpen && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setIsAccountDropdownOpen(false)}
-        />
-      )}
     </>
   );
 }; 

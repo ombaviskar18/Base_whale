@@ -254,13 +254,77 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Game Header */}
       <div className="text-center space-y-4">
-        <motion.h1 
-          className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          🐋 Whale Hunter Trivia
-        </motion.h1>
+        <div className="flex items-center justify-center space-x-4 relative">
+          {/* Animated Whale */}
+          <motion.div
+            className="relative z-10"
+            animate={{ 
+              y: [0, -10, 0],
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 3, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <div className="text-5xl filter drop-shadow-lg">🐋</div>
+          </motion.div>
+          
+          {/* Animated Title */}
+          <motion.h1 
+            className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent relative z-10"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            Whale Hunter Trivia
+          </motion.h1>
+          
+          {/* Second Animated Whale */}
+          <motion.div
+            className="relative z-10"
+            animate={{ 
+              y: [0, -8, 0],
+              rotate: [0, -5, 5, 0],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{ 
+              duration: 2.5, 
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5
+            }}
+          >
+            <div className="text-5xl filter drop-shadow-lg">🎣</div>
+          </motion.div>
+          
+          {/* Floating Bubbles Animation */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+                style={{
+                  left: `${20 + i * 15}%`,
+                  top: `${30 + (i % 2) * 40}%`,
+                }}
+                animate={{
+                  y: [0, -20, 0],
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [0.5, 1, 0.5]
+                }}
+                transition={{
+                  duration: 2 + i * 0.3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.4
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        
         <p className="text-gray-400 text-lg">
           Test your knowledge of crypto whales and earn points!
         </p>

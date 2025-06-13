@@ -107,7 +107,7 @@ const MainApp: React.FC = () => {
                 
                 {/* XMTP Integration CTA */}
                 <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-8 text-center">
-                  <div className="text-6xl mb-4">🐋</div>
+                  <div className="text-6xl mb-4">🐳</div>
                   <h2 className="text-3xl font-bold text-white mb-4">Ready for Advanced Whale Hunting?</h2>
                   <p className="text-gray-400 max-w-2xl mx-auto mb-8">
                     Experience the full power of XMTP messaging, AI-powered trivia, and real-time whale detection 

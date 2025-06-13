@@ -15,9 +15,12 @@ import {
   Zap,
   Target,
   Award,
-  Calendar
+  Calendar,
+  LogOut,
+  Settings,
+  Shield
 } from 'lucide-react';
-import { useAccount, useBalance, useEnsName } from 'wagmi';
+import { useAccount, useBalance, useEnsName, useDisconnect } from 'wagmi';
 import { userProfileManager, type UserProfile } from '../lib/userProfileManager';
 
 interface TokenBalance {
@@ -124,6 +127,7 @@ export const Account: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { data: ensName } = useEnsName({ address });
+  const { disconnect } = useDisconnect();
 
   // Load user profile when address changes
   useEffect(() => {
@@ -260,6 +264,111 @@ export const Account: React.FC = () => {
             <div className="text-xs text-gray-400 mt-1">
               {1000 - ((userProfile?.xp || 0) % 1000)} XP to level {(userProfile?.level || 1) + 1}
             </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Account Details Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Shield className="w-6 h-6 text-blue-400" />
+            <h3 className="text-xl font-bold text-white">Account Details</h3>
+          </div>
+          <motion.button
+            onClick={() => disconnect()}
+            className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/30 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Disconnect</span>
+          </motion.button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Wallet Address */}
+          <div className="space-y-2">
+            <div className="text-sm text-gray-400">Wallet Address</div>
+            <div className="flex items-center space-x-2">
+              <span className="text-white font-mono text-sm">{address}</span>
+              <motion.button
+                onClick={() => copyToClipboard(address!)}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Copy className={`w-4 h-4 ${copiedAddress ? 'text-green-400' : 'text-gray-400'}`} />
+              </motion.button>
+              <motion.a
+                href={`https://etherscan.io/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                whileHover={{ scale: 1.1 }}
+              >
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </motion.a>
+            </div>
+          </div>
+
+          {/* Balance */}
+          <div className="space-y-2">
+            <div className="text-sm text-gray-400">Balance</div>
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">⚡</span>
+              <div>
+                <div className="text-white font-semibold">
+                  {balance ? parseFloat(balance.formatted).toFixed(4) : '0.0000'} ETH
+                </div>
+                <div className="text-sm text-gray-400">
+                  ${balance ? (parseFloat(balance.formatted) * 2500).toFixed(2) : '0.00'} USD
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Network */}
+          <div className="space-y-2">
+            <div className="text-sm text-gray-400">Network</div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span className="text-white font-semibold">Ethereum</span>
+            </div>
+          </div>
+
+          {/* ENS Name */}
+          {ensName && (
+            <div className="space-y-2">
+              <div className="text-sm text-gray-400">ENS Name</div>
+              <div className="text-white font-semibold">{ensName}</div>
+            </div>
+          )}
+
+          {/* Connection Status */}
+          <div className="space-y-2">
+            <div className="text-sm text-gray-400">Status</div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-green-400 font-semibold">Connected</span>
+            </div>
+          </div>
+
+          {/* Account Settings */}
+          <div className="space-y-2">
+            <div className="text-sm text-gray-400">Settings</div>
+            <motion.button
+              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              whileHover={{ scale: 1.05 }}
+            >
+              <Settings className="w-4 h-4" />
+              <span>Account Settings</span>
+            </motion.button>
           </div>
         </div>
       </motion.div>
