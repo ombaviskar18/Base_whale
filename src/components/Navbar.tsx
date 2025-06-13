@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
@@ -13,29 +13,21 @@ import {
   Menu, 
   X, 
   Settings,
-  LogOut,
-  Coins,
-  Star,
-  TrendingUp
+  LogOut
 } from 'lucide-react';
 
 interface NavbarProps {
   currentPage: 'home' | 'leaderboard' | 'rewards' | 'account';
   onPageChange: (page: 'home' | 'leaderboard' | 'rewards' | 'account') => void;
-  userPoints?: number;
-  userXP?: number;
-  userLevel?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   currentPage, 
-  onPageChange, 
-  userPoints = 0, 
-  userXP = 0, 
-  userLevel = 1 
+  onPageChange
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
@@ -43,6 +35,23 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { data: balance } = useBalance({
     address: address,
   });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsAccountDropdownOpen(false);
+      }
+    };
+
+    if (isAccountDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAccountDropdownOpen]);
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -100,32 +109,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           ))}
         </div>
 
-        {/* User Stats & Wallet */}
+        {/* Wallet Connection */}
         <div className="flex items-center space-x-4">
-          {/* User Stats */}
-          {isConnected && (
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center space-x-1 px-3 py-1 bg-yellow-500/20 rounded-lg border border-yellow-400/30">
-                <Coins className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold">{userPoints.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center space-x-1 px-3 py-1 bg-blue-500/20 rounded-lg border border-blue-400/30">
-                <Star className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-400 font-semibold">XP: {userXP.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center space-x-1 px-3 py-1 bg-green-500/20 rounded-lg border border-green-400/30">
-                <TrendingUp className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 font-semibold">Lv. {userLevel}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Wallet Connection */}
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             {isConnected ? (
               <motion.button
                 onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
-                className="flex items-center space-x-3 px-4 py-2 bg-green-500/20 rounded-lg border border-green-400/30 text-green-400"
+                className="flex items-center space-x-3 px-4 py-2 bg-green-500/20 rounded-lg border border-green-400/30 text-green-400 hover:bg-green-500/30 transition-colors"
                 whileHover={{ scale: 1.05 }}
               >
                 <Wallet className="w-5 h-5" />
@@ -152,18 +142,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <AnimatePresence>
               {isAccountDropdownOpen && isConnected && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute right-0 top-full mt-2 w-64 backdrop-blur-xl bg-white/10 rounded-lg border border-white/20 p-4 z-50"
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 top-full mt-2 w-64 backdrop-blur-xl bg-gray-900/95 rounded-lg border border-white/20 p-4 shadow-2xl"
+                  style={{ zIndex: 9999 }}
                 >
                   <div className="space-y-3">
                     <div className="text-sm text-gray-300">
                       <div className="font-semibold text-white mb-2">Account Details</div>
                       <div className="space-y-1">
-                        <div>Address: {formatAddress(address!)}</div>
-                        <div>Balance: {formatBalance(balance)} ETH</div>
-                        <div>Network: Ethereum</div>
+                        <div>Address: <span className="text-green-400 font-mono">{formatAddress(address!)}</span></div>
+                        <div>Balance: <span className="text-blue-400 font-semibold">{formatBalance(balance)} ETH</span></div>
+                        <div>Network: <span className="text-purple-400">Ethereum</span></div>
                       </div>
                     </div>
                     
@@ -210,19 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="font-bold text-white">Whale Hunter</span>
         </div>
 
-        {/* Mobile Stats */}
-        {isConnected && (
-          <div className="flex items-center space-x-2 text-xs">
-            <div className="flex items-center space-x-1 px-2 py-1 bg-yellow-500/20 rounded border border-yellow-400/30">
-              <Coins className="w-3 h-3 text-yellow-400" />
-              <span className="text-yellow-400">{userPoints > 999 ? `${(userPoints/1000).toFixed(1)}k` : userPoints}</span>
-            </div>
-            <div className="flex items-center space-x-1 px-2 py-1 bg-blue-500/20 rounded border border-blue-400/30">
-              <Star className="w-3 h-3 text-blue-400" />
-              <span className="text-blue-400">{userXP > 999 ? `${(userXP/1000).toFixed(1)}k` : userXP}</span>
-            </div>
-          </div>
-        )}
+
 
         {/* Mobile Menu Button */}
         <motion.button

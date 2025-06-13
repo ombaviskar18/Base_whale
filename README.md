@@ -62,10 +62,10 @@ Welcome to **Guess the Whale**, a revolutionary Web3 trivia game that combines *
    ```
 
 3. **Start the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
+```bash
+npm run dev
+# or
+yarn dev
    ```
 
 4. **Open your browser**

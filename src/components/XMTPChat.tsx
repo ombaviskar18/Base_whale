@@ -18,6 +18,7 @@ export function XMTPChat() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [botAddress, setBotAddress] = useState<string | null>(null);
+  const [messageCounter, setMessageCounter] = useState(0);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const botRef = useRef<WhaleHunterBot | null>(null);
@@ -63,8 +64,9 @@ export function XMTPChat() {
   };
 
   const addBotMessage = (content: string, isAlert: boolean = false) => {
+    setMessageCounter(prev => prev + 1);
     const message: ChatMessage = {
-      id: `bot_${Date.now()}`,
+      id: `bot_${Date.now()}_${messageCounter}`,
       content,
       sender: botAddress || 'bot',
       timestamp: new Date(),
@@ -79,8 +81,9 @@ export function XMTPChat() {
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    setMessageCounter(prev => prev + 1);
     const userMessage: ChatMessage = {
-      id: `user_${Date.now()}`,
+      id: `user_${Date.now()}_${messageCounter}`,
       content: inputMessage,
       sender: 'user',
       timestamp: new Date(),
@@ -135,7 +138,7 @@ export function XMTPChat() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-scrollbar">
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div

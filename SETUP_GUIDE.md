@@ -7,7 +7,7 @@
 - **Steps**:
   1. Sign up for free account
   2. Create new project → Select "Ethereum" and "Base"
-  3. Copy your API key from dashboard
+  3. ohboard
   4. Get WebSocket URLs:
      - Ethereum: `wss://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
      - Base: `wss://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
@@ -29,7 +29,7 @@
 ### 4. **CoinGecko API** (For Price Data)
 - **Website**: https://www.coingecko.com/en/api
 - **Steps**:
-  1. Free tier available (no key needed for basic calls)
+  1. Free tier available  (no key needed for basic calls)
   2. For higher limits, sign up for Pro API key
 
 ### 5. **WalletConnect Project ID** (For Wallet Connection)

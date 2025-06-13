@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -18,6 +18,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { useAccount, useBalance, useEnsName } from 'wagmi';
+import { userProfileManager, type UserProfile } from '../lib/userProfileManager';
 
 interface TokenBalance {
   symbol: string;
@@ -118,10 +119,19 @@ const getRarityColor = (rarity: Achievement['rarity']) => {
 export const Account: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'tokens' | 'achievements' | 'stats'>('overview');
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { data: ensName } = useEnsName({ address });
+
+  // Load user profile when address changes
+  useEffect(() => {
+    if (address) {
+      const profile = userProfileManager.getProfile(address);
+      setUserProfile(profile);
+    }
+  }, [address]);
 
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -133,7 +143,13 @@ export const Account: React.FC = () => {
     setTimeout(() => setCopiedAddress(false), 2000);
   };
 
-  const totalPortfolioValue = MOCK_TOKENS.reduce((sum, token) => sum + token.value, 0);
+  // Calculate portfolio value from user's actual assets
+  const totalPortfolioValue = userProfile?.assets.reduce((sum, asset) => sum + (asset.value || 0), 0) || 0;
+  
+  // Use dynamic tokens from user profile or show empty state
+  const userTokens = userProfile?.assets.filter(asset => asset.type === 'token') || [];
+  const userNFTs = userProfile?.assets.filter(asset => asset.type === 'nft') || [];
+  const userAchievements = userProfile?.achievements || [];
 
   if (!isConnected) {
     return (
@@ -185,7 +201,7 @@ export const Account: React.FC = () => {
           {/* User Info */}
           <div className="flex-1 text-center lg:text-left">
             <h2 className="text-2xl font-bold text-white mb-2">
-              {ensName || 'Whale Hunter'}
+              {ensName || userProfile?.username || 'Whale Hunter'}
             </h2>
             <div className="flex items-center justify-center lg:justify-start space-x-2 mb-3">
               <span className="text-gray-300 font-mono">{formatAddress(address!)}</span>
@@ -211,19 +227,19 @@ export const Account: React.FC = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="text-center lg:text-left">
-                <div className="text-xl font-bold text-yellow-400">{MOCK_GAME_STATS.level}</div>
+                <div className="text-xl font-bold text-yellow-400">{userProfile?.level || 1}</div>
                 <div className="text-sm text-gray-400">Level</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-xl font-bold text-green-400">{MOCK_GAME_STATS.totalPoints.toLocaleString()}</div>
+                <div className="text-xl font-bold text-green-400">{(userProfile?.totalPoints || 0).toLocaleString()}</div>
                 <div className="text-sm text-gray-400">Points</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-xl font-bold text-blue-400">{MOCK_GAME_STATS.winRate}%</div>
+                <div className="text-xl font-bold text-blue-400">{(userProfile?.winRate || 0).toFixed(1)}%</div>
                 <div className="text-sm text-gray-400">Win Rate</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-xl font-bold text-purple-400">{MOCK_ACHIEVEMENTS.length}</div>
+                <div className="text-xl font-bold text-purple-400">{userAchievements.length}</div>
                 <div className="text-sm text-gray-400">Achievements</div>
               </div>
             </div>
@@ -232,17 +248,17 @@ export const Account: React.FC = () => {
           {/* Level Progress */}
           <div className="w-full lg:w-64">
             <div className="flex items-center justify-between text-sm text-gray-400 mb-2">
-              <span>Level {MOCK_GAME_STATS.level}</span>
-              <span>{MOCK_GAME_STATS.totalXP.toLocaleString()} XP</span>
+              <span>Level {userProfile?.level || 1}</span>
+              <span>{(userProfile?.xp || 0).toLocaleString()} XP</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-3">
               <div 
                 className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${(MOCK_GAME_STATS.totalXP % 5000) / 50}%` }}
+                style={{ width: `${((userProfile?.xp || 0) % 1000) / 10}%` }}
               />
             </div>
             <div className="text-xs text-gray-400 mt-1">
-              {5000 - (MOCK_GAME_STATS.totalXP % 5000)} XP to level {MOCK_GAME_STATS.level + 1}
+              {1000 - ((userProfile?.xp || 0) % 1000)} XP to level {(userProfile?.level || 1) + 1}
             </div>
           </div>
         </div>
@@ -291,18 +307,26 @@ export const Account: React.FC = () => {
                   <div className="text-sm text-gray-400">Total Value</div>
                 </div>
                 <div className="space-y-2">
-                  {MOCK_TOKENS.slice(0, 3).map((token) => (
-                    <div key={token.symbol} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{token.icon}</span>
-                        <span className="text-white">{token.symbol}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white">{token.balance}</div>
-                        <div className="text-sm text-gray-400">${token.value}</div>
-                      </div>
+                  {userTokens.length === 0 ? (
+                    <div className="text-center py-4">
+                      <Coins className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">No tokens yet</p>
+                      <p className="text-gray-500 text-xs">Play games and level up to earn tokens!</p>
                     </div>
-                  ))}
+                  ) : (
+                    userTokens.slice(0, 3).map((token, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">{token.symbol === 'ETH' ? '⚡' : token.symbol === 'WHALE' ? '🐋' : '💰'}</span>
+                          <span className="text-white">{token.symbol}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-white">{token.balance}</div>
+                          <div className="text-sm text-gray-400">${(token.value || 0).toFixed(2)}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -342,68 +366,89 @@ export const Account: React.FC = () => {
 
         {activeTab === 'tokens' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_TOKENS.map((token) => (
-              <motion.div
-                key={token.symbol}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6 hover:border-purple-400/50 transition-colors"
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex items-center space-x-3 mb-4">
-                  <span className="text-3xl">{token.icon}</span>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{token.symbol}</h3>
-                    <p className="text-sm text-gray-400">{token.name}</p>
+            {userTokens.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Coins className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-400 mb-2">No Tokens Yet</h3>
+                <p className="text-gray-500 mb-4">Start playing games to earn your first tokens!</p>
+              </div>
+            ) : (
+              userTokens.map((token, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6 hover:border-purple-400/50 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <span className="text-3xl">{token.symbol === 'ETH' ? '⚡' : token.symbol === 'WHALE' ? '🐋' : '💰'}</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{token.symbol}</h3>
+                      <p className="text-sm text-gray-400">{token.name}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <div className="text-2xl font-bold text-white">{token.balance}</div>
-                    <div className="text-lg text-green-400">${token.value.toLocaleString()}</div>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-2xl font-bold text-white">{token.balance}</div>
+                      <div className="text-lg text-green-400">${(token.value || 0).toFixed(2)}</div>
+                    </div>
+                    {token.contractAddress && (
+                      <div className="flex items-center space-x-2 text-xs text-gray-400">
+                        <span className="font-mono">{token.contractAddress.slice(0, 10)}...</span>
+                        <motion.button
+                          onClick={() => copyToClipboard(token.contractAddress!)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2 text-xs text-gray-400">
-                    <span className="font-mono">{token.address.slice(0, 10)}...</span>
-                    <motion.button
-                      onClick={() => copyToClipboard(token.address)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Copy className="w-3 h-3" />
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         )}
 
         {activeTab === 'achievements' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_ACHIEVEMENTS.map((achievement) => (
-              <motion.div
-                key={achievement.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6"
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex items-center space-x-3 mb-4">
-                  <span className="text-3xl">{achievement.icon}</span>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{achievement.title}</h3>
-                    <div className={`inline-flex px-2 py-1 rounded-full text-xs border ${getRarityColor(achievement.rarity)}`}>
-                      {achievement.rarity.toUpperCase()}
+            {userAchievements.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-400 mb-2">No Achievements Yet</h3>
+                <p className="text-gray-500 mb-4">Complete games to unlock your first achievements!</p>
+              </div>
+            ) : (
+              userAchievements.map((achievement) => (
+                <motion.div
+                  key={achievement.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <span className="text-3xl">{achievement.icon}</span>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{achievement.name}</h3>
+                      <div className={`inline-flex px-2 py-1 rounded-full text-xs border ${getRarityColor(achievement.rarity)}`}>
+                        {achievement.rarity.toUpperCase()}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <p className="text-gray-300 text-sm mb-3">{achievement.description}</p>
-                <div className="flex items-center space-x-2 text-xs text-gray-400">
-                  <Calendar className="w-3 h-3" />
-                  <span>Unlocked {achievement.unlockedAt}</span>
-                </div>
-              </motion.div>
-            ))}
+                  <p className="text-gray-300 text-sm mb-3">{achievement.description}</p>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-3 h-3" />
+                      <span>Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}</span>
+                    </div>
+                    <span className="text-yellow-400">+{achievement.points} pts</span>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         )}
 

@@ -1,22 +1,49 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Web3ModalProvider } from '../lib/web3Provider';
 import { Navbar } from '../components/Navbar';
 import { MCQGame } from '../components/MCQGame';
 import { Leaderboard } from '../components/Leaderboard';
 import { Rewards } from '../components/Rewards';
-import { Account } from '../components/Account';
+import { Footer } from '../components/Footer';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for Account component to avoid SSR issues
+const Account = dynamic(
+  () => import('../components/Account').then((mod) => ({ default: mod.Account })),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+      </div>
+    )
+  }
+);
 
 const MainApp: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<'home' | 'leaderboard' | 'rewards' | 'account'>('home');
   const [userPoints, setUserPoints] = useState(15000);
   const [userXP, setUserXP] = useState(23500);
   const [userLevel, setUserLevel] = useState(7);
+  const [mounted, setMounted] = useState(false);
   
   const { isConnected } = useAccount();
+
+  // Fix hydration issues
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+      </div>
+    );
+  }
 
   const handlePointsEarned = (points: number) => {
     setUserPoints(prev => prev + points);
@@ -75,7 +102,27 @@ const MainApp: React.FC = () => {
                 </motion.div>
               </div>
             ) : (
-              <MCQGame onPointsEarned={handlePointsEarned} />
+              <div className="space-y-8">
+                <MCQGame onPointsEarned={handlePointsEarned} />
+                
+                {/* XMTP Integration CTA */}
+                <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-8 text-center">
+                  <div className="text-6xl mb-4">🐋</div>
+                  <h2 className="text-3xl font-bold text-white mb-4">Ready for Advanced Whale Hunting?</h2>
+                  <p className="text-gray-400 max-w-2xl mx-auto mb-8">
+                    Experience the full power of XMTP messaging, AI-powered trivia, and real-time whale detection 
+                    in our advanced gaming environment!
+                  </p>
+                  
+                  <button 
+                    onClick={() => window.open('/xmtp', '_blank')}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-8 py-4 rounded-xl text-white font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    🚀 Launch XMTP Whale Hunter
+                  </button>
+                  <p className="text-sm text-gray-400 mt-3">Opens in new tab • Includes DetectWhale game, XMTP chat & live alerts</p>
+                </div>
+              </div>
             )}
           </div>
         );
@@ -95,9 +142,6 @@ const MainApp: React.FC = () => {
       <Navbar 
         currentPage={currentPage} 
         onPageChange={setCurrentPage}
-        userPoints={userPoints}
-        userXP={userXP}
-        userLevel={userLevel}
       />
       
       <main className="relative">
@@ -114,6 +158,9 @@ const MainApp: React.FC = () => {
         </AnimatePresence>
       </main>
       
+      {/* Footer */}
+      <Footer />
+      
       {/* Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
@@ -125,9 +172,5 @@ const MainApp: React.FC = () => {
 };
 
 export default function Home() {
-  return (
-    <Web3ModalProvider>
-      <MainApp />
-    </Web3ModalProvider>
-  );
+  return <MainApp />;
 }

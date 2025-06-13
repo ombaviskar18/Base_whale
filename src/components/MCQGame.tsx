@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, 
@@ -14,19 +14,17 @@ import {
   X,
   Lightbulb,
   Zap,
-  PlayCircle
+  PlayCircle,
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react';
 import { getProgressiveQuestions, MCQQuestion } from '../lib/questionDatabase';
+import { RealTimeWhaleMonitor, type WhaleAlert } from '../lib/realTimeWhaleMonitor';
+import { initializeTelegramBot, getTelegramBot } from '../lib/telegramBotService';
+import { getWhaleMonitorConfig, getTelegramConfig, logConfiguration } from '../lib/env';
 import { useAccount } from 'wagmi';
 
-interface WhaleAlert {
-  id: string;
-  whale: string;
-  action: string;
-  amount: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  timestamp: string;
-}
+
 
 interface MCQGameProps {
   onPointsEarned?: (points: number) => void;
@@ -51,33 +49,10 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
 
   const { isConnected } = useAccount();
 
-  // Mock whale alerts
-  const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([
-    {
-      id: '1',
-      whale: 'Vitalik.eth',
-      action: 'Transferred 1,000 ETH',
-      amount: '$2.3M',
-      severity: 'critical',
-      timestamp: '2 min ago'
-    },
-    {
-      id: '2', 
-      whale: 'Punk6529',
-      action: 'Bought CryptoPunk #7804',
-      amount: '$850K',
-      severity: 'high',
-      timestamp: '5 min ago'
-    },
-    {
-      id: '3',
-      whale: 'WhaleShark',
-      action: 'Staked 500K WHALE tokens',
-      amount: '$125K',
-      severity: 'medium', 
-      timestamp: '12 min ago'
-    }
-  ]);
+  // Real-time whale monitoring
+  const [whaleAlerts, setWhaleAlerts] = useState<WhaleAlert[]>([]);
+  const [whaleMonitor, setWhaleMonitor] = useState<RealTimeWhaleMonitor | null>(null);
+  const whaleMonitorRef = useRef<RealTimeWhaleMonitor | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -90,22 +65,58 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
     }
   }, [timeLeft, gameState]);
 
+  // Initialize whale monitoring and Telegram bot
   useEffect(() => {
-    // Add new whale alerts periodically
-    const interval = setInterval(() => {
-      const newAlert: WhaleAlert = {
-        id: Date.now().toString(),
-        whale: ['Beanie.eth', 'Pranksy.eth', 'GCR', 'Ansem'][Math.floor(Math.random() * 4)],
-        action: ['Large ETH transfer', 'NFT purchase', 'DeFi interaction', 'Token swap'][Math.floor(Math.random() * 4)],
-        amount: `$${Math.floor(Math.random() * 500 + 50)}K`,
-        severity: ['critical', 'high', 'medium', 'low'][Math.floor(Math.random() * 4)] as WhaleAlert['severity'],
-        timestamp: 'Just now'
-      };
-      
-      setWhaleAlerts(prev => [newAlert, ...prev.slice(0, 4)]);
-    }, 15000);
-
-    return () => clearInterval(interval);
+    const initializeServices = async () => {
+      try {
+        // Log configuration
+        logConfiguration();
+        
+        // Initialize Telegram bot
+        const telegramConfig = getTelegramConfig();
+        const telegramBot = initializeTelegramBot(telegramConfig);
+        
+        // Test Telegram bot connection
+        const isTelegramConnected = await telegramBot.testConnection();
+        if (isTelegramConnected) {
+          console.log('✅ Telegram bot initialized successfully');
+        }
+        
+        // Initialize whale monitor
+        const whaleConfig = getWhaleMonitorConfig();
+        const monitor = new RealTimeWhaleMonitor(whaleConfig);
+        whaleMonitorRef.current = monitor;
+        setWhaleMonitor(monitor);
+        
+        // Set up whale alert listener
+        monitor.on('whaleAlert', (alert: WhaleAlert) => {
+          console.log('🐋 New whale alert:', alert);
+          setWhaleAlerts(prev => [alert, ...prev.slice(0, 4)]);
+          
+          // Send to Telegram if bot is available
+          const bot = getTelegramBot();
+          if (bot) {
+            bot.sendWhaleAlert(alert).catch(console.error);
+          }
+        });
+        
+        // Start monitoring
+        await monitor.startMonitoring();
+        console.log('🚀 Whale monitoring started');
+        
+      } catch (error) {
+        console.error('❌ Failed to initialize services:', error);
+      }
+    };
+    
+    initializeServices();
+    
+    // Cleanup on unmount
+    return () => {
+      if (whaleMonitorRef.current) {
+        whaleMonitorRef.current.stopMonitoring();
+      }
+    };
   }, []);
 
   const startGame = () => {
@@ -465,66 +476,50 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
         {/* Whale Alerts Panel */}
         <div className="space-y-6">
           <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <TrendingUp className="w-6 h-6 text-green-400" />
-              <h3 className="text-xl font-bold text-white">Live Whale Alerts</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <TrendingUp className="w-6 h-6 text-green-400" />
+                <h3 className="text-xl font-bold text-white">Live Whale Alerts</h3>
+              </div>
+              <motion.a
+                href={getTelegramBot()?.getBotInviteLink() || 'https://t.me/Whale_alerting_bot'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-semibold transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Join Telegram</span>
+              </motion.a>
             </div>
             <div className="space-y-3">
-              {whaleAlerts.map((alert) => (
-                <motion.div
-                  key={alert.id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`p-3 rounded-lg border ${getSeverityColor(alert.severity)}`}
-                >
-                  <div className="font-semibold text-sm">{alert.whale}</div>
-                  <div className="text-xs opacity-75">{alert.action}</div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="font-bold">{alert.amount}</span>
-                    <span className="text-xs opacity-60">{alert.timestamp}</span>
-                  </div>
-                </motion.div>
-              ))}
+              {whaleAlerts.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-400 mb-2">Monitoring for whale activity...</p>
+                  <p className="text-sm text-gray-500">Real-time alerts will appear here when whales make moves</p>
+                </div>
+              ) : (
+                whaleAlerts.map((alert) => (
+                  <motion.div
+                    key={alert.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`p-3 rounded-lg border ${getSeverityColor(alert.severity)}`}
+                  >
+                    <div className="font-semibold text-sm">{alert.whale}</div>
+                    <div className="text-xs opacity-75">{alert.action}</div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="font-bold">{alert.amount}</span>
+                      <span className="text-xs opacity-60">{alert.timestamp}</span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* XMTP Chat Simulation */}
-          <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <MessageCircle className="w-6 h-6 text-blue-400" />
-              <h3 className="text-xl font-bold text-white">XMTP Chat</h3>
-            </div>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              <div className="bg-blue-500/10 p-3 rounded-lg border-l-4 border-blue-400">
-                <div className="text-blue-400 text-sm font-semibold">WhaleBot</div>
-                <div className="text-gray-300 text-sm">New whale alert: Vitalik just moved 1,000 ETH!</div>
-                <div className="text-xs text-gray-400 mt-1">2 min ago</div>
-              </div>
-              
-              <div className="bg-purple-500/10 p-3 rounded-lg border-l-4 border-purple-400">
-                <div className="text-purple-400 text-sm font-semibold">CryptoHunter</div>
-                <div className="text-gray-300 text-sm">Anyone else seeing these massive NFT buys today?</div>
-                <div className="text-xs text-gray-400 mt-1">5 min ago</div>
-              </div>
-              
-              <div className="bg-green-500/10 p-3 rounded-lg border-l-4 border-green-400">
-                <div className="text-green-400 text-sm font-semibold">WhaleWatcher</div>
-                <div className="text-gray-300 text-sm">This trivia game is getting competitive! 🐋</div>
-                <div className="text-xs text-gray-400 mt-1">8 min ago</div>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex space-x-2">
-              <input 
-                type="text" 
-                placeholder="Type a message..."
-                className="flex-1 bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-              />
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                Send
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
