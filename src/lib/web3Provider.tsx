@@ -11,7 +11,12 @@ import { walletConnect, injected, coinbaseWallet } from 'wagmi/connectors';
 const queryClient = new QueryClient();
 
 // 1. Your WalletConnect Cloud project ID
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'your-project-id';
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+// Check if projectId is available
+if (!projectId) {
+  console.error('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required for wallet connection');
+}
 
 // 2. Create wagmiConfig
 const metadata = {

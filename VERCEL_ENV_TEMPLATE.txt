@@ -1,0 +1,27 @@
+# Copy these to your Vercel Environment Variables section
+# Go to: Project Settings > Environment Variables
+
+# === REQUIRED (Must have at least this one) ===
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id_here
+
+# === RECOMMENDED for full functionality ===
+ALCHEMY_API_KEY=your_alchemy_api_key_here
+NEXT_PUBLIC_COINGECKO_API_KEY=your_coingecko_api_key_here
+XMTP_ENV=production
+NODE_ENV=production
+
+# === OPTIONAL for advanced features ===
+ETHERSCAN_API_KEY=your_etherscan_api_key_here
+OPENSEA_API_KEY=your_opensea_api_key_here
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_CHAT_ID=your_telegram_chat_id_here
+TELEGRAM_BOT_USERNAME=your_telegram_bot_username_here
+ENCRYPTION_KEY=your_32_character_encryption_key_here
+
+# How to get WalletConnect Project ID:
+# 1. Go to https://cloud.walletconnect.com/
+# 2. Create account or sign in
+# 3. Create new project
+# 4. Copy the Project ID
+
+# Default values will be used for missing optional variables 

@@ -12,8 +12,10 @@ export async function POST(request: NextRequest) {
 
     const bot = getTelegramBot();
     if (!bot) {
-      console.error('Telegram bot not initialized');
-      return NextResponse.json({ error: 'Bot not available' }, { status: 503 });
+      console.warn('Telegram bot not initialized - webhook request ignored');
+      return NextResponse.json({ 
+        error: 'Bot not available - configure TELEGRAM_BOT_TOKEN to enable webhook' 
+      }, { status: 200 });
     }
 
     // Handle regular messages
@@ -83,7 +85,10 @@ export async function GET(request: NextRequest) {
       status: 'ok',
       timestamp: new Date().toISOString(),
       botConnected: isConnected,
-      message: 'Telegram webhook endpoint is active'
+      botAvailable: !!bot,
+      message: bot 
+        ? 'Telegram webhook endpoint is active' 
+        : 'Telegram webhook endpoint is active but bot not configured'
     });
   } catch (error) {
     return NextResponse.json(
@@ -91,9 +96,10 @@ export async function GET(request: NextRequest) {
         status: 'error',
         timestamp: new Date().toISOString(),
         botConnected: false,
+        botAvailable: false,
         error: 'Failed to check bot status'
       },
-      { status: 500 }
+      { status: 200 } // Changed to 200 since this is expected behavior when no token is set
     );
   }
 } 

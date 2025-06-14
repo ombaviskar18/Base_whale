@@ -17,10 +17,13 @@ export async function POST(request: NextRequest) {
 
     const bot = getTelegramBot();
     if (!bot) {
-      console.error('Telegram bot not initialized');
+      console.warn('Telegram bot not initialized - skipping alert');
       return NextResponse.json(
-        { error: 'Telegram bot not available' },
-        { status: 503 }
+        { 
+          success: false,
+          error: 'Telegram bot not available - configure TELEGRAM_BOT_TOKEN to enable alerts' 
+        },
+        { status: 200 } // Changed to 200 since this is expected behavior
       );
     }
 
@@ -63,8 +66,11 @@ export async function GET(request: NextRequest) {
     const bot = getTelegramBot();
     if (!bot) {
       return NextResponse.json(
-        { error: 'Telegram bot not available' },
-        { status: 503 }
+        { 
+          success: false,
+          error: 'Telegram bot not available - configure TELEGRAM_BOT_TOKEN to enable test alerts' 
+        },
+        { status: 200 }
       );
     }
 

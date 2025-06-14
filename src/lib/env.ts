@@ -41,25 +41,25 @@ class EnvironmentManager {
   }
 
   private loadEnvironmentConfig(): EnvironmentConfig {
-    // Load from environment variables or use your provided defaults
+    // Load from environment variables - NO HARDCODED SECRETS
     return {
       // Blockchain APIs
-      alchemyApiKey: process.env.ALCHEMY_API_KEY || 'x2fFyeL-BONypwQZ6fc1DyhRnghyCow5',
-      etherscanApiKey: process.env.ETHERSCAN_API_KEY || 'MCB4YKVKGZMRJCHH7EVZH1Y3KCKZRDI83S',
-      openSeaApiKey: process.env.OPENSEA_API_KEY || 'f37de42161c14ffc86654d714d02bbb6',
-      coinGeckoApiKey: process.env.COINGECKO_API_KEY || 'CG-cWq5AJmVDhc31ohUQzRjWE1w',
+      alchemyApiKey: process.env.ALCHEMY_API_KEY,
+      etherscanApiKey: process.env.ETHERSCAN_API_KEY,
+      openSeaApiKey: process.env.OPENSEA_API_KEY,
+      coinGeckoApiKey: process.env.COINGECKO_API_KEY,
       
       // Wallet Connection
-      walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'aad626052f5e095526b51b717eaa973b',
+      walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
       
       // XMTP
       xmtpEnv: process.env.XMTP_ENV || 'dev',
-      encryptionKey: process.env.ENCRYPTION_KEY || '2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7158809cf4f3c',
+      encryptionKey: process.env.ENCRYPTION_KEY,
       
-      // Network URLs
-      ethereumRpcUrl: process.env.ETHEREUM_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/x2fFyeL-BONypwQZ6fc1DyhRnghyCow5',
+      // Network URLs (Public RPC endpoints only)
+      ethereumRpcUrl: process.env.ETHEREUM_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/demo',
       baseRpcUrl: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
-      polygonRpcUrl: process.env.POLYGON_RPC_URL || 'https://polygon-mainnet.g.alchemy.com/v2/x2fFyeL-BONypwQZ6fc1DyhRnghyCow5',
+      polygonRpcUrl: process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com',
       
       // Game Configuration
       whaleAlertThreshold: parseInt(process.env.WHALE_ALERT_THRESHOLD || '50000'),
@@ -67,9 +67,9 @@ class EnvironmentManager {
       botName: process.env.BOT_NAME || 'WhaleHunterBot',
       
       // Telegram Bot
-      telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '8060135249:AAGPps8LWa1Ov6IrkmatFKSJ0XZZJSSdjYQ',
-      telegramChatId: process.env.TELEGRAM_CHAT_ID || '1382805134',
-      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'Whale_alerting_bot',
+      telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
+      telegramChatId: process.env.TELEGRAM_CHAT_ID,
+      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'WhaleHunterBot',
       botServerUrl: process.env.BOT_SERVER_URL,
       
       // Development
@@ -96,9 +96,9 @@ class EnvironmentManager {
 
   public getTelegramConfig() {
     return {
-      botToken: this.config.telegramBotToken || '8060135249:AAGPps8LWa1Ov6IrkmatFKSJ0XZZJSSdjYQ',
+      botToken: this.config.telegramBotToken,
       chatId: this.config.telegramChatId,
-      botUsername: this.config.telegramBotUsername || 'Whale_alerting_bot',
+      botUsername: this.config.telegramBotUsername || 'WhaleHunterBot',
       botServerUrl: this.config.botServerUrl,
     };
   }
@@ -121,29 +121,36 @@ class EnvironmentManager {
     };
   }
 
-  public validateConfiguration(): { isValid: boolean; errors: string[] } {
+  public validateConfiguration(): { isValid: boolean; errors: string[]; warnings: string[] } {
     const errors: string[] = [];
+    const warnings: string[] = [];
 
     // Check critical configurations
     if (!this.config.walletConnectProjectId) {
       errors.push('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is required for wallet connection');
     }
 
-    if (!this.config.telegramBotToken) {
-      console.warn('TELEGRAM_BOT_TOKEN not found, using default bot token');
-    }
-
+    // Check optional but recommended configurations
     if (!this.config.alchemyApiKey) {
-      errors.push('ALCHEMY_API_KEY is recommended for real-time whale monitoring');
+      warnings.push('ALCHEMY_API_KEY not found - using public RPC endpoints (may be slower)');
     }
 
     if (!this.config.coinGeckoApiKey) {
-      console.warn('COINGECKO_API_KEY not found, using free tier with rate limits');
+      warnings.push('COINGECKO_API_KEY not found - using free tier with rate limits');
+    }
+
+    if (!this.config.telegramBotToken) {
+      warnings.push('TELEGRAM_BOT_TOKEN not found - Telegram features disabled');
+    }
+
+    if (!this.config.encryptionKey) {
+      warnings.push('ENCRYPTION_KEY not found - using insecure default for development only');
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
+      warnings
     };
   }
 

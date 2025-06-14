@@ -163,7 +163,7 @@ export const DetectWhaleGame: React.FC<DetectWhaleGameProps> = ({ onScoreUpdate 
     try {
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${chain.coinGeckoId}&vs_currencies=usd&include_24hr_change=true`, {
         headers: {
-          'X-CG-Demo-API-Key': process.env.NEXT_PUBLIC_COINGECKO_API_KEY || 'CG-cWq5AJmVDhc31ohUQzRjWE1w'
+          'X-CG-Demo-API-Key': process.env.NEXT_PUBLIC_COINGECKO_API_KEY || 'demo'
         }
       });
       
