@@ -5,6 +5,7 @@ import { Navbar } from '../components/Navbar';
 import { MCQGame } from '../components/MCQGame';
 import { Leaderboard } from '../components/Leaderboard';
 import { Rewards } from '../components/Rewards';
+import { Pricing } from '../components/Pricing';
 import { Footer } from '../components/Footer';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +25,7 @@ const Account = dynamic(
 );
 
 const MainApp: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'home' | 'leaderboard' | 'rewards' | 'account'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'leaderboard' | 'rewards' | 'pricing' | 'account'>('home');
   const [userPoints, setUserPoints] = useState(15000);
   const [userXP, setUserXP] = useState(23500);
   const [userLevel, setUserLevel] = useState(7);
@@ -212,6 +213,8 @@ const MainApp: React.FC = () => {
         return <Rewards userPoints={userPoints} userLevel={userLevel} />;
       case 'account':
         return <Account />;
+      case 'pricing':
+        return <Pricing />;
       default:
         return <MCQGame onPointsEarned={handlePointsEarned} />;
     }
@@ -219,8 +222,7 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20">
-      {/* Temporary debug element to test cursor image */}
-      <div className="fishing-rod-test"></div>
+
       
       <Navbar 
         currentPage={currentPage} 

@@ -11,12 +11,13 @@ import {
   User, 
   Wallet, 
   Menu, 
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
 
 interface NavbarProps {
-  currentPage: 'home' | 'leaderboard' | 'rewards' | 'account';
-  onPageChange: (page: 'home' | 'leaderboard' | 'rewards' | 'account') => void;
+  currentPage: 'home' | 'leaderboard' | 'rewards' | 'pricing' | 'account';
+  onPageChange: (page: 'home' | 'leaderboard' | 'rewards' | 'pricing' | 'account') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -35,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'home', label: 'Home', icon: Home },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'rewards', label: 'Rewards', icon: Gift },
+    { id: 'pricing', label: 'Pricing', icon: CreditCard },
     { id: 'account', label: 'Account', icon: User },
   ];
 
