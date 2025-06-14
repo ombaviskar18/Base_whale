@@ -215,7 +215,34 @@ We welcome contributions! Here's how you can help:
 
 ## 📱 Screenshots
 
-*Coming soon - add screenshots of your beautiful game interface!*
+### 🎮 Game Interface Showcase
+
+**1. Welcome Screen & Homepage**
+![Homepage](./public/1.png)
+*Beautiful animated whale welcome screen with wallet connection*
+
+**2. Main Game Interface**
+![Game Interface](./public/2.png)
+*Interactive trivia game with progressive hints and scoring system*
+
+**3. XMTP Chat Integration**
+![XMTP Chat](./public/3.png)
+*Real-time messaging with AI whale hunting bot and live alerts*
+
+**4. Whale Detection Dashboard**
+![Whale Detection](./public/4.png)
+*Live whale monitoring with real-time transaction alerts*
+
+**5. Complete Gaming Experience**
+![Full Experience](./public/5.png)
+*Comprehensive view showing all features working together*
+
+### ✨ Key Visual Features
+- 🎣 **Custom Fishing Rod Cursor** - Immersive whale hunting theme
+- 🐋 **Animated Whales** - Live floating animations throughout the interface
+- 💫 **Glassmorphism Design** - Modern translucent UI elements
+- 🎊 **Smooth Animations** - Framer Motion powered transitions
+- 📱 **Responsive Layout** - Perfect on desktop, tablet, and mobile
 
 ## 🐛 Bug Reports
 

@@ -68,7 +68,47 @@ const MainApp: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-6"
                 >
-                  <div className="text-6xl mb-6">🐋</div>
+                  {/* Animated Whale */}
+                  <motion.div
+                    className="text-6xl mb-6 relative z-10 flex justify-center"
+                    animate={{ 
+                      y: [0, -10, 0],
+                      rotate: [0, 5, -5, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <div className="filter drop-shadow-lg">🐋</div>
+                    
+                    {/* Floating Bubbles Animation */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(4)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+                          style={{
+                            left: `${30 + i * 20}%`,
+                            top: `${20 + (i % 2) * 60}%`,
+                          }}
+                          animate={{
+                            y: [0, -15, 0],
+                            opacity: [0.3, 0.8, 0.3],
+                            scale: [0.5, 1, 0.5]
+                          }}
+                          transition={{
+                            duration: 2 + i * 0.3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.4
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
                   <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
                     Whale Hunter
                   </h1>
@@ -107,7 +147,47 @@ const MainApp: React.FC = () => {
                 
                 {/* XMTP Integration CTA */}
                 <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/20 p-8 text-center">
-                  <div className="text-6xl mb-4">🐳</div>
+                  {/* Animated Whale */}
+                  <motion.div
+                    className="text-6xl mb-4 relative z-10 flex justify-center"
+                    animate={{ 
+                      y: [0, -8, 0],
+                      rotate: [0, -5, 5, 0],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ 
+                      duration: 2.5, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <div className="filter drop-shadow-lg">🐳</div>
+                    
+                    {/* Floating Bubbles Animation */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-1.5 h-1.5 bg-purple-400/30 rounded-full"
+                          style={{
+                            left: `${35 + i * 15}%`,
+                            top: `${25 + (i % 2) * 50}%`,
+                          }}
+                          animate={{
+                            y: [0, -12, 0],
+                            opacity: [0.4, 0.9, 0.4],
+                            scale: [0.6, 1.2, 0.6]
+                          }}
+                          transition={{
+                            duration: 1.8 + i * 0.2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.3
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
                   <h2 className="text-3xl font-bold text-white mb-4">Ready for Advanced Whale Hunting?</h2>
                   <p className="text-gray-400 max-w-2xl mx-auto mb-8">
                     Experience the full power of XMTP messaging, AI-powered trivia, and real-time whale detection 
@@ -139,6 +219,9 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20">
+      {/* Temporary debug element to test cursor image */}
+      <div className="fishing-rod-test"></div>
+      
       <Navbar 
         currentPage={currentPage} 
         onPageChange={setCurrentPage}

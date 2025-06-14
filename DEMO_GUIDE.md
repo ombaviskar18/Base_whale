@@ -130,23 +130,6 @@ const question = {
 - **Price Integration**: Live ETH/BTC prices from CoinGecko
 - **Question Database**: 5+ whale-specific questions with hints
 
-## 🔗 Environment Configuration
-
-The game uses multiple APIs and services:
-
-```env
-# Blockchain APIs
-ALCHEMY_API_KEY=x2fFyeL-BONypwQZ6fc1DyhRnghyCow5
-ETHERSCAN_API_KEY=MCB4YKVKGZMRJCHH7EVZH1Y3KCKZRDI83S
-COINGECKO_API_KEY=CG-cWq5AJmVDhc31ohUQzRjWE1w
-
-# XMTP Configuration
-XMTP_ENV=dev
-ENCRYPTION_KEY=2b7e151628aed2a6abf7158809cf4f3c
-
-# Wallet Connect
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=aad626052f5e095526b51b717eaa973b
-```
 
 ## 🎯 Next Steps for Full Production
 
@@ -167,16 +150,6 @@ Try these commands in the XMTP chat:
 - `/hint` - Get question hint (-20 points)
 - `/score` - View current score
 - `A`, `B`, `C`, `D` - Answer questions
-
-## 🐋 Famous Whales Tracked
-
-1. **Vitalik Buterin** - Ethereum founder, known for charity
-2. **Punk6529** - NFT collector, metaverse advocate
-3. **Pranksy** - Early NFT trader, art collector
-4. **WhaleShark** - $WHALE token creator, massive NFT collection
-5. **Beanie** - High-value NFT buyer, DAO founder
-
-Each whale has unique question sets based on their real activities and personalities!
 
 ---
 
