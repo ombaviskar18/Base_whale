@@ -64,12 +64,12 @@ class EnvironmentManager {
       // Game Configuration
       whaleAlertThreshold: parseInt(process.env.WHALE_ALERT_THRESHOLD || '50000'),
       gameTimeout: parseInt(process.env.GAME_TIMEOUT || '300000'),
-      botName: process.env.BOT_NAME || 'WhaleHunterBot',
+      botName: process.env.BOT_NAME || 'Whale_alerting_bot',
       
       // Telegram Bot
       telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
       telegramChatId: process.env.TELEGRAM_CHAT_ID,
-      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'WhaleHunterBot',
+      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'Whale_alerting_bot',
       botServerUrl: process.env.BOT_SERVER_URL,
       
       // Development
@@ -96,10 +96,12 @@ class EnvironmentManager {
 
   public getTelegramConfig() {
     return {
-      botToken: this.config.telegramBotToken,
-      chatId: this.config.telegramChatId,
-      botUsername: this.config.telegramBotUsername || 'WhaleHunterBot',
+      botToken: this.config.telegramBotToken || '8060135249:AAGPps8LWa1Ov6IrkmatFKSJ0XZZJSSdjYQ',
+      chatId: this.config.telegramChatId || '1382805134',
+      botUsername: this.config.telegramBotUsername || 'Whale_alerting_bot',
       botServerUrl: this.config.botServerUrl,
+      alchemyApiKey: this.config.alchemyApiKey || 'x2fFyeL-BONypwQZ6fc1DyhRnghyCow5',
+      etherscanApiKey: this.config.etherscanApiKey || 'MCB4YKVKGZMRJCHH7EVZH1Y3KCKZRDI83S',
     };
   }
 

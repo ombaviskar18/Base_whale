@@ -74,12 +74,24 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
         
         // Initialize Telegram bot
         const telegramConfig = getTelegramConfig();
-        const telegramBot = initializeTelegramBot(telegramConfig);
         
-        // Test Telegram bot connection
-        const isTelegramConnected = await telegramBot.testConnection();
-        if (isTelegramConnected) {
-          console.log('✅ Telegram bot initialized successfully');
+        // Only initialize if we have valid config
+        if (telegramConfig.botToken && telegramConfig.botUsername) {
+          try {
+            const telegramBot = initializeTelegramBot(telegramConfig);
+            
+            // Initialize bot with webhook only in production
+            const webhookUrl = process.env.NODE_ENV === 'production' 
+              ? 'https://whalehunter.vercel.app/api/telegram-webhook'
+              : undefined; // No webhook in development
+            await telegramBot.initializeBot(webhookUrl);
+            
+            console.log('✅ Telegram bot initialized successfully');
+          } catch (error) {
+            console.error('⚠️ Telegram bot initialization failed:', error);
+          }
+        } else {
+          console.log('⚠️ Telegram bot configuration missing, using default');
         }
         
         // Initialize whale monitor
@@ -546,7 +558,7 @@ export const MCQGame: React.FC<MCQGameProps> = ({ onPointsEarned }) => {
                 <h3 className="text-xl font-bold text-white">Live Whale Alerts</h3>
               </div>
               <motion.a
-                href={getTelegramBot()?.getBotInviteLink() || 'https://t.me/Whale_alerting_bot'}
+                href={'https://t.me/Whale_alerting_bot'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-semibold transition-colors"

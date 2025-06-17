@@ -1,11 +1,12 @@
 import { RealTimeWhaleDetector, RealWhaleActivity } from './realTimeWhaleDetector';
 
 interface TelegramConfig {
-  botToken: string;
+  botToken: string | undefined;
   chatId?: string;
-  botUsername: string;
+  botUsername: string | undefined;
   alchemyApiKey?: string;
   etherscanApiKey?: string;
+  botServerUrl?: string;
 }
 
 interface TelegramMessage {
@@ -22,6 +23,13 @@ export class TelegramBotService {
   private subscribedChats: Set<string> = new Set();
 
   constructor(config: TelegramConfig) {
+    if (!config.botToken) {
+      throw new Error('Bot token is required for Telegram bot service');
+    }
+    if (!config.botUsername) {
+      throw new Error('Bot username is required for Telegram bot service');
+    }
+    
     this.config = config;
     this.apiUrl = `https://api.telegram.org/bot${config.botToken}`;
     
@@ -51,6 +59,113 @@ export class TelegramBotService {
     } catch (error) {
       console.error('Failed to initialize whale detector for Telegram bot:', error);
     }
+  }
+
+  /**
+   * Initialize the bot for production use
+   */
+  public async initializeBot(webhookUrl?: string): Promise<boolean> {
+    try {
+      // Test bot connection first
+      const isConnected = await this.testConnection();
+      if (!isConnected) {
+        throw new Error('Failed to connect to Telegram bot');
+      }
+
+      // Set webhook if URL provided
+      if (webhookUrl) {
+        const webhookSet = await this.setWebhook(webhookUrl);
+        if (!webhookSet) {
+          console.warn('⚠️ Failed to set webhook, bot will work in polling mode');
+        }
+      }
+
+      // Start demo alerts if no real whale detector
+      if (!this.whaleDetector) {
+        this.startDemoAlerts();
+      }
+
+      console.log('✅ Telegram bot initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to initialize bot:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Start sending demo whale alerts for testing
+   */
+  private startDemoAlerts(): void {
+    console.log('🚀 Starting demo whale alerts...');
+    
+    // Send demo alert every 5 minutes
+    setInterval(() => {
+      if (this.subscribedChats.size > 0) {
+        this.sendDemoWhaleAlert();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Send first demo alert after 30 seconds
+    setTimeout(() => {
+      if (this.subscribedChats.size > 0) {
+        this.sendDemoWhaleAlert();
+      }
+    }, 30000);
+  }
+
+  /**
+   * Send a demo whale alert
+   */
+  private async sendDemoWhaleAlert(): Promise<void> {
+    const demoAlerts = [
+      {
+        whale: 'Vitalik Buterin',
+        amount: '1,247 ETH ($3.2M)',
+        action: 'Large transfer to Binance',
+        network: 'ethereum',
+        severity: 'high',
+        timestamp: new Date().toLocaleTimeString()
+      },
+      {
+        whale: 'Punk6529',
+        amount: '892 ETH ($2.1M)',
+        action: 'NFT purchase - CryptoPunk',
+        network: 'ethereum', 
+        severity: 'medium',
+        timestamp: new Date().toLocaleTimeString()
+      },
+      {
+        whale: 'Whale #3',
+        amount: '2,156 ETH ($5.8M)',
+        action: 'Uniswap V3 swap',
+        network: 'ethereum',
+        severity: 'critical',
+        timestamp: new Date().toLocaleTimeString()
+      }
+    ];
+
+    const randomAlert = demoAlerts[Math.floor(Math.random() * demoAlerts.length)];
+    
+    try {
+      await this.broadcastDemoAlert(randomAlert);
+      console.log('📢 Demo whale alert sent');
+    } catch (error) {
+      console.error('❌ Failed to send demo alert:', error);
+    }
+  }
+
+  /**
+   * Broadcast demo alert to all subscribed chats
+   */
+  private async broadcastDemoAlert(alert: any): Promise<void> {
+    const message = this.formatWhaleAlert(alert);
+    
+    const promises = Array.from(this.subscribedChats).map(chatId => 
+      this.sendMessage(chatId, message)
+    );
+
+    await Promise.all(promises);
   }
 
   /**
@@ -97,6 +212,33 @@ export class TelegramBotService {
   public subscribeToChatAlerts(chatId: string): void {
     this.subscribedChats.add(chatId);
     console.log(`✅ Chat ${chatId} subscribed to whale alerts`);
+    
+    // Send immediate demo alert as confirmation
+    setTimeout(() => {
+      this.sendImmediateDemo(chatId);
+    }, 2000); // 2 seconds after subscription
+  }
+
+  /**
+   * Send immediate demo alert to new subscriber
+   */
+  private async sendImmediateDemo(chatId: string): Promise<void> {
+    const welcomeAlert = {
+      whale: 'Welcome Demo Whale',
+      amount: '500 ETH ($1.3M)',
+      action: 'Test transaction - You are now subscribed!',
+      network: 'ethereum',
+      severity: 'high',
+      timestamp: new Date().toLocaleTimeString()
+    };
+
+    try {
+      const message = this.formatWhaleAlert(welcomeAlert);
+      await this.sendMessage(chatId, message);
+      console.log('📢 Welcome demo alert sent to new subscriber');
+    } catch (error) {
+      console.error('❌ Failed to send welcome demo alert:', error);
+    }
   }
 
   /**
@@ -196,7 +338,7 @@ export class TelegramBotService {
   }
 
   /**
-   * Format real-time whale alert for Telegram
+   * Format real-time whale alert
    */
   private formatRealWhaleAlert(activity: RealWhaleActivity): string {
     const severityEmoji = {
@@ -228,7 +370,7 @@ export class TelegramBotService {
 
 🎯 <b>REAL-TIME DATA FROM BLOCKCHAIN!</b>
 💎 Test your whale knowledge in our trivia game!
-🎮 Play now: https://guess-the-whale.vercel.app/xmtp
+🎮 Play now: https://whalehunter.vercel.app/
 
 #WhaleAlert #Crypto #Ethereum #RealTime`;
   }
@@ -262,7 +404,7 @@ ${networkIcon} <b>Network:</b> ${alert.transaction?.network?.toUpperCase() || 'E
 ⏰ <b>Time:</b> ${alert.timestamp}
 
 💎 <b>Join the hunt in Guess the Whale!</b>
-🎮 Play now: https://guess-the-whale.vercel.app
+🎮 Play now: https://whalehunter.vercel.app/
 
 #WhaleAlert #Crypto #${alert.transaction?.network || 'Ethereum'}`;
   }
@@ -287,9 +429,9 @@ ${networkIcon} <b>Network:</b> ${alert.transaction?.network?.toUpperCase() || 'E
 • Famous whale addresses (Vitalik, Punk6529, etc.)
 • DeFi interactions and large transfers
 
-🎮 <b>XMTP-Powered Trivia Game:</b>
-Chat with our AI bot and play real-time whale trivia!
-🔗 https://guess-the-whale.vercel.app/xmtp
+🎮 <b>Whale Hunter Trivia Game:</b>
+Test your crypto whale knowledge and earn rewards!
+🔗 https://whalehunter.vercel.app/
 
 <b>Commands:</b>
 /start - Subscribe to alerts
@@ -329,8 +471,8 @@ Happy whale hunting! 🐋⚡`;
 • Updates every few seconds
 
 <b>Play the Game:</b>
-Test your crypto knowledge with our whale trivia game!
-🎮 https://guess-the-whale.vercel.app
+Test your crypto knowledge with whale trivia!
+🎮 https://whalehunter.vercel.app/
 
 Questions? Contact support in the game!`;
         return await this.sendMessage(chatId, helpMessage);
